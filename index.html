@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing DVD Logo ScreenSaver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body.nocursor {
+            cursor: none;
+        }
+
+        #dvdLogo {
+            position: absolute;
+            width: 180px;
+            height: auto;
+            fill: #ff0000;
+            transition: fill 0.3s ease;
+        }
+
+        #welcome {
+            background: rgba(239, 244, 255, 0.9);
+            color: #333;
+            position: absolute;
+            z-index: 11;
+            bottom: 0;
+            left: 10%;
+            right: 10%;
+            font-family: Arial, sans-serif;
+            padding: 5px 30px 8px;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            line-height: 20px;
+            font-size: 17px;
+            border: 3px solid #222;
+            border-bottom: none;
+            text-align: center;
+        }
+
+        #closeButton {
+            cursor: pointer;
+            display: inline-block;
+            border: 3px solid #000000;
+            width: 29px;
+            height: 29px;
+            text-align: center;
+            line-height: 24px;
+            background-color: #ff5757;
+            font-weight: bold;
+            font-size: 29px;
+            border-radius: 20px;
+            position: absolute;
+            color: #000000;
+            font-family: arial;
+            top: -18px;
+            right: -15px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 18px;
+            font-weight: normal;
+            margin-bottom: 10px;
+        }
+
+        .bigButton {
+            text-decoration: none;
+            font-size: 16px;
+            background: #29618a;
+            color: #FFF;
+            display: inline-block;
+            padding: 5px 12px;
+            cursor: pointer;
+            margin: 5px 10px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            line-height: 20px;
+            border: none;
+        }
+
+        .buttonContainer {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .keyHint {
+            color: #ffe309;
+        }
+
+        @media screen and (max-width: 700px) {
+            .bigButton {
+                line-height: 17px;
+                margin: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <svg id="dvdLogo" viewBox="0 0 16 8" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7.4 4.959C3.268 4.959 0 5.509 0 6.186C0 6.864 3.268 7.413 7.4 7.413C11.532 7.413 14.943 6.864 14.943 6.186C14.944 5.508 11.533 4.959 7.4 4.959ZM7.263 6.51C6.306 6.51 5.53 6.273 5.53 5.98C5.53 5.687 6.306 5.45 7.263 5.45C8.22 5.45 8.995 5.687 8.995 5.98C8.995 6.273 8.219 6.51 7.263 6.51ZM13.319 0.052002H9.701L7.769 2.291L6.849 0.0830021H1.145L0.933 1.045H3.202C3.202 1.045 4.239 0.909002 4.273 1.739C4.273 3.177 1.897 3.055 1.897 3.055L2.341 1.555H0.869L0.194 3.988H2.862C2.862 3.988 5.683 3.738 5.683 1.77C5.683 1.77 5.797 1.196 5.749 0.943002L7.124 4.62L10.559 1.055H13.165C13.165 1.055 13.963 1.123 13.963 1.74C13.963 3.178 11.604 3.028 11.604 3.028L11.969 1.556H10.682L9.946 3.989H12.399C12.399 3.989 15.465 3.799 15.465 1.71C15.465 1.709 15.404 0.052002 13.319 0.052002Z"/>
+        </svg>
+        
+        <div id="welcome">
+            <div id="closeButton">&times;</div>
+            <h1>Bouncing DVD Logo ScreenSaver</h1>
+            <p>The DVD slowly becomes obsolete but here you can still watch the DVD logo screensaver bouncing on your screen as it changes its color. Can spot it hitting the corner?</p>
+            <div class="buttonContainer">
+                <button onclick="window.location.href='/'" class="bigButton">&laquo; Home</button>
+                <button onclick="closeWelcome()" class="bigButton">Close <span class="keyHint">Esc</span></button>
+                <button onclick="toggleFullScreen()" class="bigButton">Full Screen <span class="keyHint">F11</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const FPS = 40;
+        let position = { x: 50, y: 50 };
+        let velocity = { x: 3, y: 3 };
+        let color = '#ff0000';
+        let isFullScreen = false;
+        let lastTime = 0;
+        let animationFrameId;
+
+        // DOM Elements
+        const container = document.getElementById('container');
+        const dvdLogo = document.getElementById('dvdLogo');
+        const welcome = document.getElementById('welcome');
+        const closeBtn = document.getElementById('closeButton');
+
+        // Initialize
+        function init() {
+            // Position the logo initially
+            updateLogoPosition();
+            
+            // Start animation loop
+            requestAnimationFrame(animate);
+            
+            // Event listeners
+            closeBtn.addEventListener('click', closeWelcome);
+            document.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('resize', handleResize);
+        }
+
+        // Generate random color
+        function randomColor() {
+            return '#' + Math.random().toString(16).slice(2, 8).toUpperCase();
+        }
+
+        // Update logo position
+        function updateLogoPosition() {
+            dvdLogo.style.left = position.x + 'px';
+            dvdLogo.style.top = position.y + 'px';
+        }
+
+        // Animation loop
+        function animate(timestamp) {
+            if (timestamp - lastTime >= 1000 / FPS) {
+                lastTime = timestamp;
+                
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+                const logoWidth = dvdLogo.clientWidth;
+                const logoHeight = dvdLogo.clientHeight;
+                
+                // Update position
+                position.x += velocity.x;
+                position.y += velocity.y;
+                
+                // Handle horizontal bounce
+                if (position.x + logoWidth >= containerWidth || position.x <= 0) {
+                    velocity.x = -velocity.x;
+                    dvdLogo.style.fill = randomColor();
+                }
+                
+                // Handle vertical bounce
+                if (position.y + logoHeight >= containerHeight || position.y <= 0) {
+                    velocity.y = -velocity.y;
+                    dvdLogo.style.fill = randomColor();
+                }
+                
+                // Update logo position
+                updateLogoPosition();
+            }
+            
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // Close welcome message
+        function closeWelcome() {
+            welcome.style.display = 'none';
+            document.body.classList.add('nocursor');
+        }
+
+        // Toggle fullscreen
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+                isFullScreen = true;
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    isFullScreen = false;
+                }
+            }
+        }
+
+        // Handle key press
+        function handleKeyDown(e) {
+            if (e.key === "Escape") {
+                closeWelcome();
+            } else if (e.key === "f" || e.key === "F" || e.keyCode === 70) {
+                toggleFullScreen();
+            }
+        }
+
+        // Handle window resize
+        function handleResize() {
+            position = { x: 10, y: 10 };
+            updateLogoPosition();
+        }
+
+        // Start the animation
+        window.onload = init;
+    </script>
+</body>
+</html>
